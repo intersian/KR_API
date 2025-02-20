@@ -56,10 +56,12 @@ class KISApi:
                         self.approval_key = token_info.get("approval_key")
                         self.approval_key_expired_at = token_info.get("approval_key_expired_at")
                         print("저장된 토큰을 로드했습니다.")
+                        return True
                     else:
                         print("저장된 토큰이 만료되었거나 유효하지 않습니다.")
         except Exception as e:
             print(f"토큰 로드 중 오류 발생: {str(e)}")
+        return False
     
     def _save_token(self):
         """토큰 정보 저장"""

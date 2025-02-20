@@ -1,0 +1,12 @@
+{
+    "api_key": "PSOuaQp3WA0klz1bE0kECtUpz3R8TTRqqgt8",
+    "api_secret": "Of/V65xsBs9ehwdZRaqf4z4HHx5zP93WbNYUp0827+FpgNkMZzVEtIvLk0tWzqKTIvxapMktmJy9fSpsakpdoXUTikETIRL5VOBVOWDi84yCxRrLbiobmKHjgiThi4ERDVqFk5og/pKfKxTDT2jLsHmg+oUPwO9vs9csBkTSftmbHWcQdMQ=",
+    "account_number": "4680572501",
+    "is_paper_trading": false,
+    "symbol": "KR6036422E29",
+    "target_quantity": "1",
+    "order_quantity": "1",
+    "min_price": "10000.0",
+    "max_price": "10150.0",
+    "interval": "10"
+}
