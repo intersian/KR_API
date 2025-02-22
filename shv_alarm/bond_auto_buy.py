@@ -432,52 +432,105 @@ async def modify_bond_order(api, order_no, symbol, current_price):
         print(f"주문 정정 실패: {e}")
         return False
 
-async def monitor_balance():
-    """채권 잔고 모니터링"""
-    # API 연결
-    api = KISApi(
-        api_key=API_KEY,
-        api_secret=API_SECRET,
-        account_number=ACCOUNT_NUMBER,
-        is_paper_trading=IS_PAPER_TRADING
-    )
-    
-    # 목표 종목명 조회
-    target_name = await get_bond_name(api, TARGET_BOND["symbol"])
-    
-    print("\n=== 채권 자동 매수 시작 ===")
-    print(f"목표 종목: {target_name} ({TARGET_BOND['symbol']})")
-    print(f"목표 수량: {TARGET_BOND['target_quantity']:,}")
-    print(f"매수 범위: {TARGET_BOND['min_price']:,.1f} ~ {TARGET_BOND['max_price']:,.1f}")
-    print(f"조회 간격: {INTERVAL}초")
-    print("-" * 50)
-    
-    while True:
-        try:
-            # 채권 잔고 조회
-            await get_bond_balance(api)
+async def monitor_and_order(api):
+    """잔고 확인 및 주문 처리 통합 프로세스"""
+    try:
+        while True:
+            # 1. 잔고 조회
+            balance_url = "https://openapi.koreainvestment.com:9443/uapi/domestic-bond/v1/trading/inquire-balance"
+            balance_params = {
+                "CANO": api.account_number[:8],
+                "ACNT_PRDT_CD": api.account_number[8:],
+                "INQR_CNDT": "00",
+                "PDNO": "",
+                "BUY_DT": "",
+                "CTX_AREA_FK200": "",
+                "CTX_AREA_NK200": ""
+            }
             
-            # 채권 주문 조회
-            await get_bond_orders(api)
+            headers = {
+                "content-type": "application/json; charset=utf-8",
+                "authorization": f"Bearer {await api._get_access_token()}",
+                "appkey": api.api_key,
+                "appsecret": api.api_secret,
+                "tr_id": "CTSC0343R",
+                "custtype": "P"
+            }
             
-            # 다음 조회까지 대기
+            balance_result = await api.request("get", balance_url, params=balance_params, headers=headers)
+            
+            if balance_result.get("rt_cd") != "0":
+                raise Exception(f"잔고 조회 실패: {balance_result.get('msg1')}")
+            
+            # 2. 현재 보유수량 확인
+            current_quantity = 0
+            for bond in balance_result.get("output", []):
+                if bond.get("pdno") == TARGET_BOND["symbol"]:
+                    current_quantity = int(bond.get("cblc_qty", "0"))
+                    break
+            
+            current_time = datetime.now().strftime('%H:%M:%S')
+            print(f"\n=== 채권 잔고 확인 ({current_time}) ===")
+            print(f"현재 보유수량: {current_quantity:,}")
+            print(f"목표 보유수량: {TARGET_BOND['target_quantity']:,}")
+            print("-" * 50)
+            
+            # 3. 목표 수량 달성 확인
+            if current_quantity >= TARGET_BOND["target_quantity"]:
+                print(f"\n목표 수량 달성! 모니터링을 종료합니다.")
+                return True
+            
+            # 4. 미달성 시 주문 처리
+            # 4-1. 정정 가능한 주문 조회
+            orders_url = "https://openapi.koreainvestment.com:9443/uapi/domestic-bond/v1/trading/inquire-psbl-rvsecncl"
+            orders_result = await api.request("get", orders_url, params=params, headers=headers)
+            
+            if orders_result.get("rt_cd") != "0":
+                raise Exception(f"주문 조회 실패: {orders_result.get('msg1')}")
+            
+            output_list = orders_result.get("output", [])
+            
+            # 4-2. 주문 처리 로직
+            if not output_list:
+                print("정정/취소 가능한 주문이 없습니다. 신규 매수를 시도합니다.")
+                await check_and_order(api)
+            else:
+                for order in output_list:
+                    if (order.get('pdno') == TARGET_BOND["symbol"] and 
+                        int(order.get('ord_psbl_qty', '0')) > 0):
+                        print("미체결 주문 발견 - 정정 검토")
+                        order_no = order.get('odno', '-')
+                        current_price = float(order.get('bond_ord_unpr', '0'))
+                        await modify_bond_order(api, order_no, TARGET_BOND["symbol"], current_price)
+            
+            # 5. 대기
             await asyncio.sleep(INTERVAL)
             
-        except asyncio.CancelledError:
-            print("\n모니터링이 중단되었습니다.")
-            break
-        except Exception as e:
-            print(f"모니터링 오류: {e}")
-            await asyncio.sleep(INTERVAL)
+    except Exception as e:
+        print(f"모니터링 오류: {e}")
+        return False
 
+# 메인 함수 수정
 async def main():
     """메인 함수"""
+    config = load_config()
+    if not config:
+        print("설정 파일을 찾을 수 없습니다.")
+        return
+    
+    api = KISApi(
+        api_key=config.get("KIS_API_KEY"),
+        api_secret=config.get("KIS_API_SECRET"),
+        account_number=config.get("KIS_ACCOUNT_NUMBER"),
+        is_paper_trading=config.get("IS_PAPER_TRADING", "True").lower() == "true"
+    )
+    
     try:
-        # 모니터링 시작
-        await monitor_balance()
-            
+        result = await monitor_and_order(api)
+        if result:
+            print("\n=== 프로그램이 정상 종료되었습니다 ===")
     except KeyboardInterrupt:
-        print("\n프로그램을 종료합니다.")
+        print("\n\n프로그램을 종료합니다.")
     except Exception as e:
         print(f"\n오류 발생: {e}")
 

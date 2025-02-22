@@ -20,11 +20,11 @@ DEFAULT_CONFIG = {
     'is_paper_trading': False,
     
     # 목표 설정
-    'symbol': 'KR6036422E29',  # 목표 종목코드
-    'target_quantity': 1,     # 목표 보유수량
+    'symbol': 'KR6150351D99',  # 목표 종목코드
+    'target_quantity': 2,     # 목표 보유수량
     'order_quantity': 1,       # 1회 매수수량
     'min_price': 10000.0,      # 최소 매수가격
-    'max_price': 10150.0,      # 최대 매수가격
+    'max_price': 10500.0,      # 최대 매수가격
     'interval': 10             # 조회 간격 (초)
 }
 
@@ -71,16 +71,17 @@ class LogHandler(logging.Handler):
 
 class MonitorThread(QThread):
     """모니터링 스레드"""
+    # 시그널 정의
     log_signal = pyqtSignal(str)
-    finished_signal = pyqtSignal()
     target_achieved_signal = pyqtSignal(str)
-    price_error_signal = pyqtSignal(str)
     
     def __init__(self, config):
         super().__init__()
         self.config = config
         self.is_running = False
         self.loop = None
+        self.logger = None
+        self.target_achieved = False  # 목표 달성 플래그 추가
         
         # 로거 설정
         self.logger = logging.getLogger('Monitor')
@@ -110,359 +111,153 @@ class MonitorThread(QThread):
             }
             
             result = await api.request("get", url, params=params, headers=headers)
-            return result.get("output", {}).get("prdt_name", "-")
+            
+            if result.get("rt_cd") != "0":
+                raise Exception(f"조회 실패: {result.get('msg1')}")
+                
+            bond_name = result.get("output", {}).get("prdt_name", "-")
+            return bond_name
             
         except Exception as e:
             return f"조회 실패: {str(e)}"
 
-    async def get_bond_balance(self, api):
-        """채권 잔고 조회"""
+    async def monitor_and_order(self, api):
+        """잔고 확인 및 주문 처리 통합 프로세스"""
         try:
-            url = API_URLS['balance']
-            
-            params = {
-                "CANO": self.config['account_number'][:8],
-                "ACNT_PRDT_CD": self.config['account_number'][8:],
-                "INQR_CNDT": "00",
-                "PDNO": "",
-                "BUY_DT": "",
-                "CTX_AREA_FK200": "",
-                "CTX_AREA_NK200": ""
-            }
-            
-            headers = {
-                "content-type": "application/json; charset=utf-8",
-                "authorization": f"Bearer {await api._get_access_token()}",
-                "appkey": api.api_key,
-                "appsecret": api.api_secret,
-                "tr_id": TR_ID['balance'],
-                "custtype": "P"
-            }
-            
-            result = await api.request("get", url, params=params, headers=headers)
-            
-            if result.get("rt_cd") != "0":
-                raise Exception(f"조회 실패: {result.get('msg1')}")
-                
-            output = result.get("output", [])
-            current_time = datetime.now().strftime('%H:%M:%S')
-            
-            self.logger.info(f"\n=== 채권 잔고 현황 ({current_time}) ===")
-            self.logger.info(LOG_SEPARATOR)
-            
-            # 목표 종목의 보유수량 확인
-            current_quantity = 0
-            target_found = False
-            
-            for bond in output:
-                if bond.get('pdno') == self.config['symbol']:
-                    target_found = True
-                    current_quantity += int(bond.get('cblc_qty', '0'))
+            while self.is_running and not self.target_achieved:  # 조건 수정
+                try:
+                    # 1. 잔고 조회
+                    balance_url = API_URLS['balance']  # URL 상수 사용
+                    balance_params = {
+                        "CANO": api.account_number[:8],
+                        "ACNT_PRDT_CD": api.account_number[8:],
+                        "INQR_CNDT": "00",
+                        "PDNO": "",
+                        "BUY_DT": "",
+                        "CTX_AREA_FK200": "",
+                        "CTX_AREA_NK200": ""
+                    }
                     
-                    self.logger.info(f"종목명: {bond.get('prdt_name', '-')}")
-                    self.logger.info(f"매수일자: {bond.get('buy_dt', '-')}")
-                    self.logger.info(f"잔고수량: {int(bond.get('cblc_qty', '0')):,}")
-                    self.logger.info(f"주문가능수량: {int(bond.get('ord_psbl_qty', '0')):,}")
-                    self.logger.info(LOG_SEPARATOR)
-            
-            if not target_found:
-                self.logger.info("목표 종목 보유내역이 없습니다.")
-                self.logger.info(LOG_SEPARATOR)
-            
-            # 목표 수량 달성 확인
-            if current_quantity >= self.config['target_quantity']:
-                # 정정가능 주문 조회 및 취소
-                url = API_URLS['orders']
-                params = {
-                    "CANO": self.config['account_number'][:8],
-                    "ACNT_PRDT_CD": self.config['account_number'][8:],
-                    "ORD_DT": "",
-                    "ODNO": "",
-                    "CTX_AREA_FK200": "",
-                    "CTX_AREA_NK200": ""
-                }
-                
-                headers = {
-                    "content-type": "application/json; charset=utf-8",
-                    "authorization": f"Bearer {await api._get_access_token()}",
-                    "appkey": api.api_key,
-                    "appsecret": api.api_secret,
-                    "tr_id": TR_ID['orders'],
-                    "custtype": "P"
-                }
-                
-                result = await api.request("get", url, params=params, headers=headers)
-                
-                if result.get("rt_cd") == "0":
-                    output_list = result.get("output", [])
+                    headers = {
+                        "content-type": "application/json; charset=utf-8",
+                        "authorization": f"Bearer {await api._get_access_token()}",
+                        "appkey": api.api_key,
+                        "appsecret": api.api_secret,
+                        "tr_id": TR_ID['balance'],  # TR ID 상수 사용
+                        "custtype": "P"
+                    }
                     
-                    # 목표 종목의 정정가능 주문 취소
-                    for order in output_list:
-                        if (order.get('pdno') == self.config['symbol'] and 
-                            int(order.get('ord_psbl_qty', '0')) > 0):
-                            
-                            order_no = order.get('odno', '')
-                            self.logger.info(f"\n미체결 주문 취소 시도")
-                            self.logger.info(f"주문번호: {order_no}")
-                            
-                            # 주문 취소
-                            cancel_url = API_URLS['modify']
-                            cancel_body = {
-                                "CANO": self.config['account_number'][:8],
-                                "ACNT_PRDT_CD": self.config['account_number'][8:],
-                                "PDNO": self.config['symbol'],
-                                "ORGN_ODNO": order_no,
-                                "ORD_QTY2": "0",
-                                "BOND_ORD_UNPR": "0",
-                                "QTY_ALL_ORD_YN": "Y",
-                                "RVSE_CNCL_DVSN_CD": "02",  # 02: 취소
-                                "MGCO_APTM_ODNO": "",
-                                "ORD_SVR_DVSN_CD": "0",
-                                "CTAC_TLNO": ""
-                            }
-                            
-                            cancel_headers = {
-                                "content-type": "application/json; charset=utf-8",
-                                "authorization": f"Bearer {await api._get_access_token()}",
-                                "appkey": api.api_key,
-                                "appsecret": api.api_secret,
-                                "tr_id": TR_ID['modify'],
-                                "custtype": "P"
-                            }
-                            
-                            cancel_result = await api.request("post", cancel_url, data=cancel_body, headers=cancel_headers)
-                            
-                            if cancel_result.get("rt_cd") == "0":
-                                self.logger.info("주문 취소 완료")
-                            else:
-                                self.logger.error(f"주문 취소 실패: {cancel_result.get('msg1')}")
-                            
-                            self.logger.info(LOG_SEPARATOR)
-                
-                # 목표 달성 메시지 출력 및 프로그램 종료
-                message = (f"\n=== 자동 매수 완료 ===\n"
-                          f"목표 종목의 보유수량({current_quantity:,})이\n"
-                          f"목표수량({self.config['target_quantity']:,})에 도달했습니다.")
-                self.logger.info(message)
-                self.logger.info(LOG_SEPARATOR)
-                
-                # 목표 달성 시그널 발생
-                self.target_achieved_signal.emit(message)
-                self.is_running = False
-            
-            return current_quantity
+                    balance_result = await api.request("get", balance_url, params=balance_params, headers=headers)
+                    
+                    if balance_result.get("rt_cd") != "0":
+                        raise Exception(f"잔고 조회 실패: {balance_result.get('msg1')}")
+                    
+                    # 2. 현재 보유수량 확인
+                    current_quantity = 0
+                    for bond in balance_result.get("output", []):
+                        if bond.get("pdno") == self.config['symbol']:
+                            current_quantity = int(bond.get("cblc_qty", "0"))
+                            break
+                    
+                    current_time = datetime.now().strftime('%H:%M:%S')
+                    self.logger.info(f"\n=== 채권 잔고 확인 ({current_time}) ===")
+                    self.logger.info(f"현재 보유수량: {current_quantity:,}")
+                    self.logger.info(f"목표 보유수량: {self.config['target_quantity']:,})")
+                    self.logger.info("-" * 50)
+                    
+                    # 3. 목표 수량 달성 확인
+                    if current_quantity >= self.config['target_quantity']:
+                        msg = f"\n목표 수량 달성! (보유: {current_quantity:,} / 목표: {self.config['target_quantity']:,})"
+                        self.logger.info(msg)
+                        self.target_achieved_signal.emit(msg)
+                        self.target_achieved = True  # 플래그 설정
+                        self.is_running = False  # 실행 중지
+                        return True
+                    
+                    # 4. 미달성 시 주문 처리
+                    # 4-1. 정정 가능한 주문 조회
+                    orders_url = "https://openapi.koreainvestment.com:9443/uapi/domestic-bond/v1/trading/inquire-psbl-rvsecncl"
+                    orders_result = await api.request("get", orders_url, params=balance_params, headers=headers)
+                    
+                    if orders_result.get("rt_cd") != "0":
+                        raise Exception(f"주문 조회 실패: {orders_result.get('msg1')}")
+                    
+                    output_list = orders_result.get("output", [])
+                    
+                    # 4-2. 주문 처리 로직
+                    if not output_list:
+                        self.logger.info("정정/취소 가능한 주문이 없습니다. 신규 매수를 시도합니다.")
+                        await self.check_and_order(api)
+                    else:
+                        for order in output_list:
+                            if (order.get('pdno') == self.config['symbol'] and 
+                                int(order.get('ord_psbl_qty', '0')) > 0):
+                                self.logger.info("미체결 주문 발견 - 정정 검토")
+                                order_no = order.get('odno', '-')
+                                current_price = float(order.get('bond_ord_unpr', '0'))
+                                await self.modify_bond_order(api, order_no, self.config['symbol'], current_price)
+                    
+                    # 5. 대기
+                    await asyncio.sleep(self.config['interval'])
+                    
+                except Exception as e:
+                    self.logger.error(f"모니터링 중 오류 발생: {str(e)}")
+                    await asyncio.sleep(self.config['interval'])
             
         except Exception as e:
-            self.logger.error(f"잔고 조회 실패: {e}")
-            return 0
-
-    async def get_bond_orders(self, api):
-        """정정취소가능한 채권 주문 조회"""
-        try:
-            url = API_URLS['orders']
-            
-            params = {
-                "CANO": self.config['account_number'][:8],
-                "ACNT_PRDT_CD": self.config['account_number'][8:],
-                "ORD_DT": "",
-                "ODNO": "",
-                "CTX_AREA_FK200": "",
-                "CTX_AREA_NK200": ""
-            }
-            
-            headers = {
-                "content-type": "application/json; charset=utf-8",
-                "authorization": f"Bearer {await api._get_access_token()}",
-                "appkey": api.api_key,
-                "appsecret": api.api_secret,
-                "tr_id": TR_ID['orders'],
-                "custtype": "P"
-            }
-            
-            result = await api.request("get", url, params=params, headers=headers)
-            
-            if result.get("rt_cd") != "0":
-                raise Exception(f"조회 실패: {result.get('msg1')}")
-                
-            output_list = result.get("output", [])
-            current_time = datetime.now().strftime('%H:%M:%S')
-            
-            self.logger.info(f"\n=== 채권 주문 내역 조회 ({current_time}) ===")
-            self.logger.info(LOG_SEPARATOR)
-            
-            has_target_order = False  # 목표 종목의 정정가능 주문 여부
-            target_orders_found = False  # 목표 종목의 주문 존재 여부
-            
-            for order in output_list:
-                if order.get('pdno') == self.config['symbol']:
-                    target_orders_found = True
-                    
-                    # 주문시각 포맷팅 (HHMMSS -> HH:MM:SS)
-                    ord_time = order.get('ord_tmd', '-')
-                    if ord_time != '-':
-                        ord_time = f"{ord_time[:2]}:{ord_time[2:4]}:{ord_time[4:]}"
-                    
-                    order_no = order.get('odno', '-')
-                    current_price = float(order.get('bond_ord_unpr', '0'))
-                    
-                    self.logger.info(f"주문번호: {order_no}")
-                    self.logger.info(f"주문수량: {int(order.get('ord_qty', '0')):,}")
-                    self.logger.info(f"주문단가: {current_price:,.1f}")
-                    self.logger.info(f"주문시각: {ord_time}")
-                    self.logger.info(f"총체결수량: {int(order.get('tot_ccld_qty', '0')):,}")
-                    self.logger.info(f"정정가능수량: {int(order.get('ord_psbl_qty', '0')):,}")
-                    
-                    # 미체결 수량이 있는 경우 정정 주문 검토
-                    if int(order.get('ord_psbl_qty', '0')) > 0:
-                        has_target_order = True
-                        self.logger.info(f"\n미체결 주문 발견 - 정정 검토")
-                        
-                        # 호가 조회
-                        quote_url = API_URLS['quote']
-                        quote_params = {
-                            "FID_COND_MRKT_DIV_CODE": "B",
-                            "FID_INPUT_ISCD": self.config['symbol']
-                        }
-                        quote_headers = {
-                            "content-type": "application/json; charset=utf-8",
-                            "authorization": f"Bearer {await api._get_access_token()}",
-                            "appkey": api.api_key,
-                            "appsecret": api.api_secret,
-                            "tr_id": TR_ID['quote'],
-                            "custtype": "P"
-                        }
-                        
-                        quote_result = await api.request("get", quote_url, params=quote_params, headers=quote_headers)
-                        
-                        if quote_result.get("rt_cd") == "0":
-                            output = quote_result.get("output", {})
-                            current_bid_price = float(output.get('bond_bidp1', '0'))  # 매수1호가
-                            current_ask_price = float(output.get('bond_askp1', '0'))  # 매도1호가
-                            
-                            self.logger.info(f"현재 매수1호가: {current_bid_price:,.1f}")
-                            self.logger.info(f"현재 매도1호가: {current_ask_price:,.1f}")
-                            
-                            # 정정 주문가격 결정
-                            if current_price != current_bid_price:  # 주문가격이 매수1호가와 다르면
-                                new_price = current_bid_price + 1  # 매수1호가 + 1원
-                                
-                                if new_price >= current_ask_price:  # 매도1호가 이상이면
-                                    new_price = current_bid_price   # 매수1호가로 정정
-                                
-                                # 가격 범위 확인
-                                if not (self.config['min_price'] <= new_price <= self.config['max_price']):
-                                    error_msg = (f"\n=== 정정가격 범위 초과 ===\n"
-                                               f"정정가격({new_price:,.1f})이\n"
-                                               f"허용범위({self.config['min_price']:,.1f} ~ {self.config['max_price']:,.1f})를\n"
-                                               f"벗어났습니다.")
-                                    self.logger.error(error_msg)
-                                    self.logger.info(LOG_SEPARATOR)
-                                    
-                                    # 가격 오류 시그널 발생
-                                    self.price_error_signal.emit(error_msg)
-                                    self.is_running = False
-                                    return False
-                                
-                                # 정정 주문 실행
-                                await self.modify_bond_order(api, order_no, self.config['symbol'], new_price)
-                            else:
-                                self.logger.info("주문가격이 현재 매수1호가와 동일하여 정정하지 않습니다.")
-                    
-                    self.logger.info(LOG_SEPARATOR)
-            
-            if not target_orders_found:
-                self.logger.info("목표 종목의 주문내역이 없습니다.")
-                self.logger.info(LOG_SEPARATOR)
-            
-            # 정정가능 주문이 없으면 매수 주문 시도
-            if not has_target_order:
-                self.logger.info("목표 종목의 정정가능 주문이 없습니다.")
-                await self.check_and_order(api)
-            
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"주문 조회 실패: {e}")
+            self.logger.error(f"모니터링 프로세스 오류: {str(e)}")
             return False
+    
+    def run(self):
+        """스레드 실행"""
+        self.is_running = True
+        self.target_achieved = False  # 초기화
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        
+        # 로그 핸들러 설정
+        self.logger = logging.getLogger('Monitor')
+        
+        try:
+            # API 초기화
+            api = KISApi(
+                api_key=self.config["api_key"],
+                api_secret=self.config["api_secret"],
+                account_number=self.config["account_number"],
+                is_paper_trading=self.config["is_paper_trading"]
+            )
+            
+            # 모니터링 시작
+            result = self.loop.run_until_complete(self.monitor_and_order(api))
+            
+            if result or self.target_achieved:  # 조건 수정
+                self.is_running = False
+                self.logger.info("\n=== 목표 달성으로 모니터링을 종료합니다 ===")
+            
+        except Exception as e:
+            self.logger.error(f"실행 오류: {str(e)}")
+        finally:
+            self.is_running = False
+            self.loop.close()
 
-    async def modify_bond_order(self, api, order_no, symbol, new_price):
+    def stop(self):
+        """스레드 중지"""
+        self.is_running = False
+        self.target_achieved = True  # 중지 시 플래그도 설정
+        if self.loop and self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
+
+    async def modify_bond_order(self, api, order_no, symbol, current_price):
         """채권 주문 정정"""
         try:
             # 호가 조회로 매수1호가 확인
-            quote_url = API_URLS['quote']
-            quote_params = {
-                "FID_COND_MRKT_DIV_CODE": "B",  # 시장구분: B(채권)
-                "FID_INPUT_ISCD": symbol,        # 종목코드
-            }
-            quote_headers = {
-                "content-type": "application/json; charset=utf-8",
-                "authorization": f"Bearer {await api._get_access_token()}",
-                "appkey": api.api_key,
-                "appsecret": api.api_secret,
-                "tr_id": TR_ID['quote'],  # 채권 호가 조회
-                "custtype": "P"            # 개인
-            }
-            
-            quote_result = await api.request("get", quote_url, params=quote_params, headers=quote_headers)
-            
-            if quote_result.get("rt_cd") != "0":
-                raise Exception(f"호가 조회 실패: {quote_result.get('msg1')}")
-                
-            output = quote_result.get("output", {})
-            bid_price = float(output.get('bond_bidp1', '0'))  # 매수1호가
-            
-            # 정정 주문
-            url = API_URLS['modify']
-            
-            body = {
-                "CANO": api.account_number[:8],
-                "ACNT_PRDT_CD": api.account_number[8:],
-                "PDNO": symbol,
-                "ORGN_ODNO": order_no,
-                "RVSE_CNCL_DVSN_CD": "01",   # 정정취소구분코드 (01: 정정)
-                "ORD_QTY2": "0",             # 주문수량2 (0: 전량)
-                "BOND_ORD_UNPR": str(new_price),  # 채권주문단가 (매수1호가 + 1)
-                "QTY_ALL_ORD_YN": "Y",       # 주문수량전체여부
-                "MGCO_APTM_ODNO": "",        # 운용사지정주문번호
-                "ORD_SVR_DVSN_CD": "0",      # 주문서버구분코드
-                "CTAC_TLNO": "",             # 연락전화번호
+            url = API_URLS['quote']
+            params = {
+                "FID_COND_MRKT_DIV_CODE": "B",
+                "FID_INPUT_ISCD": symbol
             }
             
             headers = {
-                "content-type": "application/json; charset=utf-8",
-                "authorization": f"Bearer {await api._get_access_token()}",
-                "appkey": api.api_key,
-                "appsecret": api.api_secret,
-                "tr_id": TR_ID['modify'],
-                "custtype": "P"
-            }
-            
-            result = await api.request("post", url, data=body, headers=headers)
-            
-            if result.get("rt_cd") != "0":
-                raise Exception(f"정정 실패: {result.get('msg1')}")
-                
-            self.logger.info(f"\n주문번호 {order_no} 정정 완료")
-            self.logger.info(f"기존 매수1호가: {bid_price:,.1f}")
-            self.logger.info(f"정정 주문가격: {new_price:,.1f}")
-            self.logger.info(LOG_SEPARATOR)
-            
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"주문 정정 실패: {e}")
-            return False
-
-    async def check_and_order(self, api):
-        """호가 확인 후 주문"""
-        try:
-            # 호가 조회
-            quote_url = API_URLS['quote']
-            quote_params = {
-                "FID_COND_MRKT_DIV_CODE": "B",
-                "FID_INPUT_ISCD": self.config['symbol']
-            }
-            quote_headers = {
                 "content-type": "application/json; charset=utf-8",
                 "authorization": f"Bearer {await api._get_access_token()}",
                 "appkey": api.api_key,
@@ -471,128 +266,64 @@ class MonitorThread(QThread):
                 "custtype": "P"
             }
             
-            quote_result = await api.request("get", quote_url, params=quote_params, headers=quote_headers)
+            result = await api.request("get", url, params=params, headers=headers)
             
-            if quote_result.get("rt_cd") != "0":
-                raise Exception(f"호가 조회 실패: {quote_result.get('msg1')}")
+            if result.get("rt_cd") != "0":
+                raise Exception(f"호가 조회 실패: {result.get('msg1')}")
                 
-            output = quote_result.get("output", {})
+            output = result.get("output", {})
             bid_price = float(output.get('bond_bidp1', '0'))  # 매수1호가
-            ask_price = float(output.get('bond_askp1', '0'))  # 매도1호가
             
-            # 주문가격 결정
-            order_price = bid_price + 1  # 매수1호가 + 1원
-            if order_price >= ask_price:  # 매도1호가 이상이면
-                order_price = bid_price   # 매수1호가로 주문
-                price_msg = "(매수1호가와 동일)"
-            else:
-                price_msg = "(매수1호가 + 1)"
-            
-            # 가격 범위 확인
-            if not (self.config['min_price'] <= order_price <= self.config['max_price']):
-                error_msg = (f"\n=== 주문가격 범위 초과 ===\n"
-                           f"주문가격({order_price:,.1f})이\n"
-                           f"허용범위({self.config['min_price']:,.1f} ~ {self.config['max_price']:,.1f})를\n"
-                           f"벗어났습니다.")
-                self.logger.error(error_msg)
-                self.logger.info(LOG_SEPARATOR)
-                
-                # 가격 오류 시그널 발생
-                self.price_error_signal.emit(error_msg)
-                self.is_running = False
+            # 매수1호가가 범위 내인지 확인
+            if not (self.config['min_price'] <= bid_price <= self.config['max_price']):
+                self.logger.info(f"매수1호가({bid_price:,.1f})가 범위를 벗어났습니다.")
                 return False
             
-            # 매수 주문
-            url = API_URLS['order']
+            # 현재 주문가격과 비교하여 정정 필요 여부 확인
+            if abs(current_price - bid_price) < 0.1:  # 가격 차이가 0.1 미만이면 정정하지 않음
+                self.logger.info("현재 주문가격이 적정 범위 내에 있습니다.")
+                return False
             
-            body = {
-                "CANO": self.config['account_number'][:8],
-                "ACNT_PRDT_CD": self.config['account_number'][8:],
-                "PDNO": self.config['symbol'],
-                "ORD_QTY2": str(self.config['order_quantity']),
-                "BOND_ORD_UNPR": str(order_price),
-                "SAMT_MKET_PTCI_YN": "N",
-                "BOND_RTL_MKET_YN": "N",
-                "IDCR_STFNO": "",
+            # 주문 정정
+            modify_url = API_URLS['modify']
+            modify_data = {
+                "CANO": api.account_number[:8],
+                "ACNT_PRDT_CD": api.account_number[8:],
+                "PDNO": symbol,
+                "ORGN_ODNO": order_no,
+                "ORD_QTY2": "0",
+                "BOND_ORD_UNPR": str(bid_price),
+                "QTY_ALL_ORD_YN": "Y",
+                "RVSE_CNCL_DVSN_CD": "01",  # 01: 정정
                 "MGCO_APTM_ODNO": "",
                 "ORD_SVR_DVSN_CD": "0",
                 "CTAC_TLNO": ""
             }
             
-            headers = {
+            modify_headers = {
                 "content-type": "application/json; charset=utf-8",
                 "authorization": f"Bearer {await api._get_access_token()}",
                 "appkey": api.api_key,
                 "appsecret": api.api_secret,
-                "tr_id": TR_ID['order'],
+                "tr_id": TR_ID['modify'],
                 "custtype": "P"
             }
             
-            result = await api.request("post", url, data=body, headers=headers)
+            result = await api.request("post", modify_url, data=modify_data, headers=modify_headers)
             
             if result.get("rt_cd") != "0":
-                raise Exception(f"주문 실패: {result.get('msg1')}")
-                
-            order_no = result.get("output", {}).get("ODNO", "")
-            self.logger.info(f"\n=== 채권 매수 주문 완료 ===")
-            self.logger.info(f"주문번호: {order_no}")
-            self.logger.info(f"매수1호가: {bid_price:,.1f}")
-            self.logger.info(f"매도1호가: {ask_price:,.1f}")
-            self.logger.info(f"주문가격: {order_price:,.1f} {price_msg}")
-            self.logger.info(f"주문수량: {self.config['order_quantity']:,}")
-            self.logger.info(LOG_SEPARATOR)
+                raise Exception(f"정정 실패: {result.get('msg1')}")
+            
+            self.logger.info(f"\n주문번호 {order_no} 정정 완료")
+            self.logger.info(f"기존 매수1호가: {bid_price:,.1f}")
+            self.logger.info(f"정정 주문가격: {bid_price:,.1f}")
+            self.logger.info("-" * 50)
             
             return True
             
         except Exception as e:
-            self.logger.error(f"매수 주문 실패: {e}")
+            self.logger.error(f"주문 정정 실패: {str(e)}")
             return False
-
-    def run(self):
-        """스레드 실행"""
-        self.is_running = True
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(self.monitor_balance())
-        self.finished_signal.emit()  # 종료 시그널 발생
-
-    def stop(self):
-        """스레드 중지"""
-        self.is_running = False
-        if self.loop and self.loop.is_running():
-            self.loop.call_soon_threadsafe(self.loop.stop)
-
-    async def monitor_balance(self):
-        """채권 잔고 모니터링"""
-        try:
-            api = KISApi(
-                api_key=self.config['api_key'],
-                api_secret=self.config['api_secret'],
-                account_number=self.config['account_number'],
-                is_paper_trading=self.config['is_paper_trading']
-            )
-            
-            target_name = await self.get_bond_name(api, self.config['symbol'])
-            
-            self.logger.info("\n=== 채권 자동 매수 시작 ===")
-            self.logger.info(f"목표 종목: {target_name} ({self.config['symbol']})")
-            self.logger.info(f"목표 수량: {self.config['target_quantity']:,}")
-            self.logger.info(f"매수 범위: {self.config['min_price']:,.1f} ~ {self.config['max_price']:,.1f}")
-            self.logger.info(f"조회 간격: {self.config['interval']}초")
-            self.logger.info(LOG_SEPARATOR)
-            
-            while self.is_running:
-                try:
-                    await self.get_bond_balance(api)
-                    await self.get_bond_orders(api)
-                    await asyncio.sleep(self.config['interval'])
-                    
-                except Exception as e:
-                    self.logger.error(f"모니터링 오류: {e}")
-                    await asyncio.sleep(self.config['interval'])
-                    
-        except Exception as e:
-            self.logger.error(f"초기화 오류: {e}")
 
 class MainWindow(QMainWindow):
     """메인 윈도우"""
@@ -1226,72 +957,140 @@ class MainWindow(QMainWindow):
                 is_paper_trading=self.paper_check.isChecked()
             )
             
-            async def emergency_process():
-                try:
-                    # 진행중인 주문 취소
-                    cancelled_count = await self.cancel_all_orders(api)
-                    
-                    # 모니터링 중지
-                    if self.monitor_thread:
-                        self.monitor_thread.stop()
-                    
-                    # 상태 업데이트
-                    self.start_button.setEnabled(True)
-                    self.emergency_button.setEnabled(False)
-                    self.lock_button.setEnabled(True)
-                    
-                    # 결과 메시지
-                    msg = f"긴급 중지 완료\n- 취소된 주문: {cancelled_count}건"
-                    self.append_log(f"\n{msg}")
-                    self.statusBar.showMessage("긴급 중지 완료")
-                    
-                    # 알림창 표시
-                    QMessageBox.information(self, "긴급 중지", msg)
-                    
-                except Exception as e:
-                    error_msg = f"긴급 중지 처리 실패: {str(e)}"
-                    self.append_log(f"\n{error_msg}")
-                    QMessageBox.critical(self, "오류", error_msg)
-            
-            # 비동기 실행
+            # 비동기 함수를 실행하기 위한 이벤트 루프 생성
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(emergency_process())
+            cancelled_count = loop.run_until_complete(self._emergency_stop(api))
             loop.close()
             
+            # 결과 메시지
+            msg = f"긴급 중지 완료\n- 취소된 주문: {cancelled_count}건"
+            self.append_log(f"\n{msg}")
+            self.statusBar.showMessage("긴급 중지 완료")
+            
+            # 알림창 표시
+            QMessageBox.information(self, "긴급 중지", msg)
+            
         except Exception as e:
-            error_msg = f"긴급 중지 오류: {str(e)}"
+            error_msg = f"긴급 중지 처리 실패: {str(e)}"
             self.append_log(f"\n{error_msg}")
             QMessageBox.critical(self, "오류", error_msg)
+
+    async def _emergency_stop(self, api):
+        """긴급 중지 비동기 처리"""
+        try:
+            # 모니터링 중지
+            if self.monitor_thread:
+                self.monitor_thread.stop()
+            
+            # 상태 업데이트
+            self.start_button.setEnabled(True)
+            self.emergency_button.setEnabled(False)
+            self.lock_button.setEnabled(True)
+            
+            # 목표 종목의 미체결 주문 조회
+            url = API_URLS['orders']
+            params = {
+                "CANO": self.account_edit.text()[:8],
+                "ACNT_PRDT_CD": self.account_edit.text()[8:],
+                "ORD_DT": "",
+                "ODNO": "",
+                "CTX_AREA_FK200": "",
+                "CTX_AREA_NK200": ""
+            }
+            
+            headers = {
+                "content-type": "application/json; charset=utf-8",
+                "authorization": f"Bearer {await api._get_access_token()}",
+                "appkey": api.api_key,
+                "appsecret": api.api_secret,
+                "tr_id": "CTSC8035R",  # 주문 조회 TR ID
+                "custtype": "P"
+            }
+            
+            result = await api.request("get", url, params=params, headers=headers)
+            orders = result.get("output", [])
+            
+            cancelled_count = 0
+            target_symbol = self.symbol_edit.text().strip()
+            
+            # 목표 종목의 미체결 주문만 취소
+            for order in orders:
+                if (order.get('pdno') == target_symbol and 
+                    int(order.get('ord_psbl_qty', '0')) > 0):  # 정정가능수량이 있는 경우만
+                    
+                    cancel_url = API_URLS['modify']
+                    cancel_data = {
+                        "CANO": self.account_edit.text()[:8],
+                        "ACNT_PRDT_CD": self.account_edit.text()[8:],
+                        "PDNO": order.get('pdno', ''),
+                        "ORGN_ODNO": order.get('odno', ''),
+                        "ORD_QTY2": "0",              # 주문수량2 (취소 시 0)
+                        "BOND_ORD_UNPR": "0",         # 채권주문단가 (취소 시 0)
+                        "QTY_ALL_ORD_YN": "Y",        # 주문수량전체여부
+                        "RVSE_CNCL_DVSN_CD": "02",    # 정정취소구분코드 (02: 취소)
+                        "MGCO_APTM_ODNO": "",         # 운용사지정주문번호
+                        "ORD_SVR_DVSN_CD": "0",       # 주문서버구분코드
+                        "CTAC_TLNO": "",              # 연락전화번호
+                    }
+                    
+                    cancel_headers = {
+                        "content-type": "application/json; charset=utf-8",
+                        "authorization": f"Bearer {await api._get_access_token()}",
+                        "appkey": api.api_key,
+                        "appsecret": api.api_secret,
+                        "tr_id": "TTTC0953U",  # 채권 주문 취소 TR ID
+                        "custtype": "P"
+                    }
+                    
+                    cancel_result = await api.request("post", cancel_url, data=cancel_data, headers=cancel_headers)
+                    
+                    if cancel_result.get("rt_cd") == "0":
+                        cancelled_count += 1
+                        self.append_log(f"\n주문번호 {order.get('odno', '-')} 취소 완료")
+                    else:
+                        self.append_log(f"\n주문번호 {order.get('odno', '-')} 취소 실패: {cancel_result.get('msg1', '')}")
+            
+            return cancelled_count
+            
+        except Exception as e:
+            raise Exception(f"긴급 중지 처리 실패: {str(e)}")
 
     def start_monitoring(self):
         """모니터링 시작"""
         try:
             config = self.get_config()
             self.monitor_thread = MonitorThread(config)
+            
+            # 시그널 연결
             self.monitor_thread.log_signal.connect(self.append_log)
-            self.monitor_thread.finished_signal.connect(self.on_monitoring_finished)
             self.monitor_thread.target_achieved_signal.connect(self.show_target_achieved)
-            self.monitor_thread.price_error_signal.connect(self.show_price_error)
             
             # 대시보드 초기화
             self.update_dashboard({
-                'target_info': f"{config['symbol']} (목표: {config['target_quantity']:,})",
+                'target_info': config['symbol'],
                 'current_price': 0.0,
                 'holding_qty': 0,
                 'progress': 0,
                 'order_status': '모니터링 시작'
             })
             
+            # 스레드 시작
             self.monitor_thread.start()
             
+            # UI 상태 업데이트
             self.start_button.setEnabled(False)
             self.emergency_button.setEnabled(True)
             self.lock_button.setEnabled(False)
             
-        except Exception as e:
-            self.append_log(f"시작 오류: {e}")
+            # 상태바 업데이트
+            self.statusBar.showMessage("모니터링이 시작되었습니다")
             
+        except Exception as e:
+            error_msg = f"모니터링 시작 실패: {str(e)}"
+            self.append_log(f"\n{error_msg}")
+            QMessageBox.critical(self, "오류", error_msg)
+
     def on_monitoring_finished(self):
         """모니터링 종료 처리"""
         self.monitor_thread = None
@@ -1330,31 +1129,6 @@ class MainWindow(QMainWindow):
         # 프로그램 종료
         QApplication.quit()
 
-    async def get_bond_name(self, api, symbol):
-        """채권 종목명 조회"""
-        try:
-            url = API_URLS['issue_info']
-            
-            params = {
-                "PDNO": symbol,                 # 채권종목코드
-                "PRDT_TYPE_CD": "302"          # 상품유형코드 (302: 채권)
-            }
-            
-            headers = {
-                "content-type": "application/json; charset=utf-8",
-                "authorization": f"Bearer {await api._get_access_token()}",
-                "appkey": api.api_key,
-                "appsecret": api.api_secret,
-                "tr_id": TR_ID['issue_info'],
-                "custtype": "P"
-            }
-            
-            result = await api.request("get", url, params=params, headers=headers)
-            return result.get("output", {}).get("prdt_name", "-")
-            
-        except Exception as e:
-            return f"조회 실패: {str(e)}"
-
     def lookup_bond_name(self):
         """종목명 조회 버튼 클릭 핸들러"""
         try:
@@ -1380,9 +1154,12 @@ class MainWindow(QMainWindow):
                 self.bond_name_label.setText("종목코드를 입력하세요")
                 return
             
+            # 임시 MonitorThread 인스턴스 생성
+            temp_monitor = MonitorThread(config)
+            
             # 비동기 조회 실행
             async def lookup():
-                name = await self.get_bond_name(api, symbol)
+                name = await temp_monitor.get_bond_name(api, symbol)
                 self.bond_name_label.setText(name)
                 self.append_log(f"\n종목코드 {symbol} 조회 결과: {name}")
             
@@ -1466,6 +1243,18 @@ class MainWindow(QMainWindow):
     def lookup_quote(self):
         """호가 조회 버튼 클릭 핸들러"""
         try:
+            # 비동기 함수 실행을 위한 이벤트 루프 생성
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self._lookup_quote())
+            loop.close()
+        except Exception as e:
+            self.quote_text.setText(f"호가 조회 오류: {str(e)}")
+            self.statusBar.showMessage("호가 조회 실패")
+
+    async def _lookup_quote(self):
+        """호가 조회 비동기 처리"""
+        try:
             config = self.get_config()
             api = KISApi(
                 api_key=config['api_key'],
@@ -1474,92 +1263,121 @@ class MainWindow(QMainWindow):
                 is_paper_trading=config['is_paper_trading']
             )
             
-            async def check_quote():
-                try:
-                    symbol = self.symbol_edit.text().strip()
-                    if not symbol:
-                        raise Exception("종목코드를 입력하세요")
-
-                    url = API_URLS['quote']
-                    params = {
-                        "FID_COND_MRKT_DIV_CODE": "B",  # 시장구분: B(채권)
-                        "FID_INPUT_ISCD": symbol,        # 종목코드
-                    }
-                    
-                    headers = {
-                        "content-type": "application/json; charset=utf-8",
-                        "authorization": f"Bearer {await api._get_access_token()}",
-                        "appkey": api.api_key,
-                        "appsecret": api.api_secret,
-                        "tr_id": TR_ID['quote'],
-                        "custtype": "P"
-                    }
-                    
-                    result = await api.request("get", url, params=params, headers=headers)
-                    
-                    if result.get("rt_cd") != "0":
-                        raise Exception(f"조회 실패: {result.get('msg1')}")
-                    
-                    output = result.get("output", {})
-                    current_time = datetime.now().strftime('%H:%M:%S')
-                    
-                    # 매도호가와 매수호가를 리스트로 정리
-                    ask_prices = [
-                        (float(output.get(f'bond_askp{i}', '0')), 
-                         int(output.get(f'askp_rsqn{i}', '0')))
-                        for i in range(1, 6)
-                    ]
-                    
-                    bid_prices = [
-                        (float(output.get(f'bond_bidp{i}', '0')), 
-                         int(output.get(f'bidp_rsqn{i}', '0')))
-                        for i in range(1, 6)
-                    ]
-                    
-                    # 가격 내림차순 정렬
-                    ask_prices.sort(reverse=True)
-                    bid_prices.sort(reverse=True)
-                    
-                    quote_text = f"=== 호가 정보 ({current_time}) ===\n"
-                    quote_text += "-" * 40 + "\n"
-                    quote_text += "\n매도호가\n"
-                    quote_text += "-" * 40 + "\n"
-                    
-                    for price, volume in ask_prices:
-                        if price > 0:
-                            quote_text += f"{price:>10,.3f}  {volume:>8,}\n"
-                    
-                    quote_text += "\n매수호가\n"
-                    quote_text += "-" * 40 + "\n"
-                    
-                    for price, volume in bid_prices:
-                        if price > 0:
-                            quote_text += f"{price:>10,.3f}  {volume:>8,}\n"
-                    
-                    self.quote_text.setText(quote_text)
-                    self.statusBar.showMessage('호가 조회 완료')
-                    
-                except Exception as e:
-                    error_msg = f"호가 조회 실패: {str(e)}"
-                    self.quote_text.setText(error_msg)
-                    self.statusBar.showMessage(error_msg)
+            # 호가 조회
+            url = API_URLS['quote']
+            params = {
+                "FID_COND_MRKT_DIV_CODE": "B",
+                "FID_INPUT_ISCD": config['symbol']
+            }
+            headers = {
+                "content-type": "application/json; charset=utf-8",
+                "authorization": f"Bearer {await api._get_access_token()}",
+                "appkey": api.api_key,
+                "appsecret": api.api_secret,
+                "tr_id": TR_ID['quote'],
+                "custtype": "P"
+            }
             
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.run_until_complete(check_quote())
-            loop.close()
+            result = await api.request("get", url, params=params, headers=headers)
+            
+            if result.get("rt_cd") != "0":
+                raise Exception(f"조회 실패: {result.get('msg1')}")
+                
+            output = result.get("output", {})
+            current_time = datetime.now().strftime('%H:%M:%S')
+            
+            # 매도호가와 매수호가를 각각 3개씩만 추출
+            ask_prices = [
+                (float(output.get(f'bond_askp{i}', '0')), 
+                 int(output.get(f'askp_rsqn{i}', '0')))
+                for i in range(1, 4)  # 1~3까지만
+            ]
+            
+            bid_prices = [
+                (float(output.get(f'bond_bidp{i}', '0')), 
+                 int(output.get(f'bidp_rsqn{i}', '0')))
+                for i in range(1, 4)  # 1~3까지만
+            ]
+            
+            # 결과 포맷팅
+            quote_text = f"=== 호가 정보 ({current_time}) ===\n\n"
+            quote_text += "  매도호가   잔량\n"
+            quote_text += "-" * 25 + "\n"
+            
+            # 매도호가 (높은 가격부터)
+            for price, volume in sorted(ask_prices, reverse=True):
+                if price > 0:  # 0원 초과인 호가만 표시
+                    quote_text += f"{price:9,.1f} {volume:8,}\n"
+            
+            quote_text += "\n"
+            
+            # 매수호가 (높은 가격부터)
+            quote_text += "  매수호가   잔량\n"
+            quote_text += "-" * 25 + "\n"
+            for price, volume in sorted(bid_prices, reverse=True):
+                if price > 0:  # 0원 초과인 호가만 표시
+                    quote_text += f"{price:9,.1f} {volume:8,}\n"
+            
+            # 총잔량 정보
+            total_ask = int(output.get('total_askp_rsqn', '0'))
+            total_bid = int(output.get('total_bidp_rsqn', '0'))
+            quote_text += f"\n총매도잔량: {total_ask:,}"
+            quote_text += f"\n총매수잔량: {total_bid:,}"
+            
+            self.quote_text.setText(quote_text)
+            self.statusBar.showMessage("호가 조회 완료")
             
         except Exception as e:
-            error_msg = f"호가 조회 오류: {str(e)}"
-            self.quote_text.setText(error_msg)
-            self.statusBar.showMessage(error_msg)
+            self.append_log(f"\n호가 조회 실패: {str(e)}")
+            raise  # 상위 예외 처리를 위해 재발생
 
     def update_dashboard(self, data):
         """대시보드 업데이트"""
         try:
             # 목표 종목 정보 업데이트
             if 'target_info' in data:
-                self.target_info.setText(f"목표 종목: {data['target_info']}")
+                # 종목코드와 종목명 모두 표시
+                symbol = self.symbol_edit.text().strip()
+                
+                # API 연결 및 종목명 조회를 위한 이벤트 루프 생성
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                async def get_bond_name():
+                    try:
+                        api = KISApi(
+                            api_key=self.api_key_edit.text(),
+                            api_secret=self.api_secret_edit.text(),
+                            account_number=self.account_edit.text(),
+                            is_paper_trading=self.paper_check.isChecked()
+                        )
+                        
+                        url = API_URLS['issue_info']
+                        params = {
+                            "PDNO": symbol,
+                            "PRDT_TYPE_CD": "302"
+                        }
+                        headers = {
+                            "content-type": "application/json; charset=utf-8",
+                            "authorization": f"Bearer {await api._get_access_token()}",
+                            "appkey": api.api_key,
+                            "appsecret": api.api_secret,
+                            "tr_id": TR_ID['issue_info'],
+                            "custtype": "P"
+                        }
+                        
+                        result = await api.request("get", url, params=params, headers=headers)
+                        bond_name = result.get("output", {}).get("prdt_name", "-")
+                        return bond_name
+                        
+                    except Exception as e:
+                        return f"종목명 조회 실패: {str(e)}"
+                
+                bond_name = loop.run_until_complete(get_bond_name())
+                loop.close()
+                
+                # 종목명 표시
+                self.target_info.setText(f"목표 종목: {bond_name}")
             
             # 현재가 업데이트
             if 'current_price' in data:
@@ -1579,6 +1397,37 @@ class MainWindow(QMainWindow):
                 
         except Exception as e:
             self.append_log(f"\n대시보드 업데이트 오류: {str(e)}")
+
+def load_config():
+    """설정 파일 로드"""
+    try:
+        config = {}
+        with open('shv_alarm/.env', 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    if '#' in value:  # 주석 제거
+                        value = value.split('#')[0]
+                    config[key.strip()] = value.strip()
+                    
+                    # 문자열로 된 리스트를 실제 리스트로 변환
+                    if value.strip().startswith('[') and value.strip().endswith(']'):
+                        try:
+                            config[key.strip()] = json.loads(value.strip())
+                        except:
+                            pass
+                            
+        return config
+        
+    except FileNotFoundError:
+        print("설정 파일을 찾을 수 없습니다.")
+        return None
+    except Exception as e:
+        print(f"설정 파일 로드 중 오류 발생: {e}")
+        return None
 
 def main():
     app = QApplication(sys.argv)
