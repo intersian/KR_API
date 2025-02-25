@@ -14,6 +14,11 @@ TARGET_BALANCE = 1  # 목표 보유수량
 INTERVAL = 5  # 조회 간격 (초)
 IS_RUNNING = True  # 실행 상태
 
+# 매수 설정
+ORDER_QUANTITY = 1  # 1회 매수 수량
+MIN_PRICE = 10000.00  # 최소 매수가격
+MAX_PRICE = 10010.00  # 최대 매수가격
+
 async def check_orders_and_quote(api):
     """정정취소가능 주문 조회 및 호가 확인"""
     try:
@@ -34,7 +39,7 @@ async def check_orders_and_quote(api):
         if target_orders:
             # 호가 조회
             quote = await api.get_bond_quote(TARGET_SYMBOL)
-            bid_price = float(quote.get('askp1', '0'))  # 매수1호가
+            bid_price = float(quote.get('bidp1', '0'))  # 매수1호가 (bidp1으로 수정)
             
             # 주문 정보 출력 및 호가 비교
             for order in target_orders:
@@ -59,6 +64,32 @@ async def check_orders_and_quote(api):
                 print("-" * 30)
         else:
             print(f"목표 종목({TARGET_SYMBOL})의 미체결 주문이 없습니다.")
+            
+            # 호가 조회 및 매수 시도
+            quote = await api.get_bond_quote(TARGET_SYMBOL)
+            bid_price = float(quote.get('bond_bidp1', '0'))  # 매수1호가 (bidp1으로 수정)
+            suggested_price = bid_price + 1  # 매수1호가 + 1원
+            
+            print(f"매수1호가: {bid_price:,.2f}")
+            print(f"제안 매수가격: {suggested_price:,.2f}")
+            
+            # 제안 매수가격이 매수 범위를 초과하는 경우
+            if suggested_price > MAX_PRICE:
+                print(f"제안 매수가격이 최대 매수가격({MAX_PRICE:,.2f})을 초과합니다.")
+                print(f"최대 매수가격으로 주문을 시도합니다.")
+                
+                # 매수 주문 요청 - api.place_bond_order 사용
+                try:
+                    order_result = await api.place_bond_order(
+                        symbol=TARGET_SYMBOL,
+                        price=MAX_PRICE,
+                        quantity=ORDER_QUANTITY,
+                    )
+                    print(f"주문 결과: {order_result}")
+                except Exception as e:
+                    print(f"주문 실패: {str(e)}")
+            else:
+                print(f"제안 매수가격이 매수 범위 내에 있습니다. 주문을 보류합니다.")
             
     except Exception as e:
         print(f"주문 조회 실패: {str(e)}")
@@ -92,6 +123,8 @@ async def monitor_balance():
         print("\n=== 채권 잔고 모니터링 시작 ===")
         print(f"대상 종목: {target_name} ({TARGET_SYMBOL})")
         print(f"목표 수량: {TARGET_BALANCE:,}")
+        print(f"1회 매수수량: {ORDER_QUANTITY:,}")
+        print(f"매수가격 범위: {MIN_PRICE:,.2f} ~ {MAX_PRICE:,.2f}")
         print(f"조회 간격: {INTERVAL}초")
         print("-" * 50)
         

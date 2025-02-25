@@ -10,14 +10,14 @@ SYMBOLS = [
 ]
 
 # 모니터링 설정
-INTERVAL = 3  # 조회 간격 (초)
+INTERVAL = 5  # 조회 간격 (초)
 VOLUME_THRESHOLD = 10000  # 거래량 임계값
 
 def load_config():
     """설정 파일 로드"""
     try:
         config = {}
-        with open('shv_alarm/.env', 'r', encoding='utf-8') as f:
+        with open('SHV_ALARM/.env', 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):

@@ -1,0 +1,1202 @@
+[
+  {
+    "price": 110.375,
+    "duration": 110.191293,
+    "start_time": "01:59:15",
+    "end_time": "02:01:05"
+  },
+  {
+    "price": 110.3753,
+    "duration": 107.904082,
+    "start_time": "03:02:17",
+    "end_time": "03:04:04"
+  },
+  {
+    "price": 110.37,
+    "duration": 106.111599,
+    "start_time": "02:54:21",
+    "end_time": "02:56:07"
+  },
+  {
+    "price": 110.3746,
+    "duration": 104.291076,
+    "start_time": "03:07:40",
+    "end_time": "03:09:24"
+  },
+  {
+    "price": 110.375,
+    "duration": 90.279283,
+    "start_time": "02:19:40",
+    "end_time": "02:21:10"
+  },
+  {
+    "price": 110.375,
+    "duration": 87.223386,
+    "start_time": "01:55:50",
+    "end_time": "01:57:18"
+  },
+  {
+    "price": 110.38,
+    "duration": 73.201891,
+    "start_time": "01:42:46",
+    "end_time": "01:43:59"
+  },
+  {
+    "price": 110.38,
+    "duration": 73.110013,
+    "start_time": "01:31:21",
+    "end_time": "01:32:34"
+  },
+  {
+    "price": 110.375,
+    "duration": 70.908053,
+    "start_time": "02:44:47",
+    "end_time": "02:45:58"
+  },
+  {
+    "price": 110.38,
+    "duration": 70.854492,
+    "start_time": "02:01:05",
+    "end_time": "02:02:16"
+  },
+  {
+    "price": 110.375,
+    "duration": 66.202004,
+    "start_time": "02:56:07",
+    "end_time": "02:57:14"
+  },
+  {
+    "price": 110.38,
+    "duration": 66.200422,
+    "start_time": "02:58:41",
+    "end_time": "02:59:47"
+  },
+  {
+    "price": 110.37,
+    "duration": 65.256708,
+    "start_time": "01:37:06",
+    "end_time": "01:38:11"
+  },
+  {
+    "price": 110.375,
+    "duration": 64.986933,
+    "start_time": "02:28:07",
+    "end_time": "02:29:12"
+  },
+  {
+    "price": 110.37,
+    "duration": 63.559871,
+    "start_time": "02:59:50",
+    "end_time": "03:00:54"
+  },
+  {
+    "price": 110.375,
+    "duration": 60.750271,
+    "start_time": "02:25:48",
+    "end_time": "02:26:48"
+  },
+  {
+    "price": 110.38,
+    "duration": 57.946879,
+    "start_time": "01:47:54",
+    "end_time": "01:48:52"
+  },
+  {
+    "price": 110.375,
+    "duration": 57.499221,
+    "start_time": "03:04:14",
+    "end_time": "03:05:11"
+  },
+  {
+    "price": 110.38,
+    "duration": 56.692601,
+    "start_time": "00:49:30",
+    "end_time": "00:50:27"
+  },
+  {
+    "price": 110.38,
+    "duration": 56.688479,
+    "start_time": "02:30:29",
+    "end_time": "02:31:26"
+  },
+  {
+    "price": 110.38,
+    "duration": 54.580139,
+    "start_time": "01:13:43",
+    "end_time": "01:14:37"
+  },
+  {
+    "price": 110.38,
+    "duration": 53.903543,
+    "start_time": "01:51:56",
+    "end_time": "01:52:50"
+  },
+  {
+    "price": 110.375,
+    "duration": 52.888999,
+    "start_time": "02:21:22",
+    "end_time": "02:22:15"
+  },
+  {
+    "price": 110.3702,
+    "duration": 52.640039,
+    "start_time": "03:01:24",
+    "end_time": "03:02:17"
+  },
+  {
+    "price": 110.375,
+    "duration": 52.526781,
+    "start_time": "02:06:42",
+    "end_time": "02:07:34"
+  },
+  {
+    "price": 110.37,
+    "duration": 52.044904,
+    "start_time": "02:03:04",
+    "end_time": "02:03:56"
+  },
+  {
+    "price": 110.375,
+    "duration": 51.869281,
+    "start_time": "02:24:46",
+    "end_time": "02:25:38"
+  },
+  {
+    "price": 110.38,
+    "duration": 51.037947,
+    "start_time": "00:40:28",
+    "end_time": "00:41:20"
+  },
+  {
+    "price": 110.375,
+    "duration": 50.023333,
+    "start_time": "02:48:14",
+    "end_time": "02:49:05"
+  },
+  {
+    "price": 110.38,
+    "duration": 49.808148,
+    "start_time": "00:36:53",
+    "end_time": "00:37:43"
+  },
+  {
+    "price": 110.375,
+    "duration": 48.283081,
+    "start_time": "02:02:16",
+    "end_time": "02:03:04"
+  },
+  {
+    "price": 110.375,
+    "duration": 48.239021,
+    "start_time": "02:43:35",
+    "end_time": "02:44:23"
+  },
+  {
+    "price": 110.375,
+    "duration": 44.819004,
+    "start_time": "02:41:37",
+    "end_time": "02:42:22"
+  },
+  {
+    "price": 110.375,
+    "duration": 42.771426,
+    "start_time": "02:40:11",
+    "end_time": "02:40:54"
+  },
+  {
+    "price": 110.37,
+    "duration": 42.564039,
+    "start_time": "03:06:57",
+    "end_time": "03:07:40"
+  },
+  {
+    "price": 110.38,
+    "duration": 42.38371,
+    "start_time": "01:57:22",
+    "end_time": "01:58:04"
+  },
+  {
+    "price": 110.38,
+    "duration": 42.166613,
+    "start_time": "02:08:29",
+    "end_time": "02:09:11"
+  },
+  {
+    "price": 110.38,
+    "duration": 41.984492,
+    "start_time": "01:54:25",
+    "end_time": "01:55:07"
+  },
+  {
+    "price": 110.37,
+    "duration": 41.344256,
+    "start_time": "02:16:40",
+    "end_time": "02:17:22"
+  },
+  {
+    "price": 110.375,
+    "duration": 40.981054,
+    "start_time": "02:23:20",
+    "end_time": "02:24:01"
+  },
+  {
+    "price": 110.37,
+    "duration": 40.896765,
+    "start_time": "00:20:48",
+    "end_time": "00:21:29"
+  },
+  {
+    "price": 110.375,
+    "duration": 39.731084,
+    "start_time": "02:14:44",
+    "end_time": "02:15:24"
+  },
+  {
+    "price": 110.375,
+    "duration": 39.161053,
+    "start_time": "02:04:24",
+    "end_time": "02:05:03"
+  },
+  {
+    "price": 110.37,
+    "duration": 39.143365,
+    "start_time": "02:09:11",
+    "end_time": "02:09:50"
+  },
+  {
+    "price": 110.375,
+    "duration": 38.337016,
+    "start_time": "02:51:47",
+    "end_time": "02:52:26"
+  },
+  {
+    "price": 110.38,
+    "duration": 38.107338,
+    "start_time": "00:26:19",
+    "end_time": "00:26:57"
+  },
+  {
+    "price": 110.3767,
+    "duration": 37.932887,
+    "start_time": "02:52:26",
+    "end_time": "02:53:04"
+  },
+  {
+    "price": 110.38,
+    "duration": 37.871409,
+    "start_time": "00:31:55",
+    "end_time": "00:32:33"
+  },
+  {
+    "price": 110.38,
+    "duration": 37.646166,
+    "start_time": "23:55:59",
+    "end_time": "23:56:36"
+  },
+  {
+    "price": 110.3747,
+    "duration": 36.510784,
+    "start_time": "03:09:55",
+    "end_time": "03:10:32"
+  },
+  {
+    "price": 110.375,
+    "duration": 36.314989,
+    "start_time": "02:32:47",
+    "end_time": "02:33:24"
+  },
+  {
+    "price": 110.3767,
+    "duration": 36.140742,
+    "start_time": "02:40:58",
+    "end_time": "02:41:34"
+  },
+  {
+    "price": 110.375,
+    "duration": 35.933839,
+    "start_time": "02:07:47",
+    "end_time": "02:08:23"
+  },
+  {
+    "price": 110.375,
+    "duration": 35.91874,
+    "start_time": "02:35:41",
+    "end_time": "02:36:17"
+  },
+  {
+    "price": 110.375,
+    "duration": 35.518333,
+    "start_time": "01:53:50",
+    "end_time": "01:54:25"
+  },
+  {
+    "price": 110.378,
+    "duration": 35.328243,
+    "start_time": "02:05:41",
+    "end_time": "02:06:16"
+  },
+  {
+    "price": 110.375,
+    "duration": 34.488938,
+    "start_time": "02:32:12",
+    "end_time": "02:32:46"
+  },
+  {
+    "price": 110.38,
+    "duration": 34.26598,
+    "start_time": "02:53:34",
+    "end_time": "02:54:08"
+  },
+  {
+    "price": 110.38,
+    "duration": 33.576414,
+    "start_time": "00:54:23",
+    "end_time": "00:54:56"
+  },
+  {
+    "price": 110.38,
+    "duration": 33.372908,
+    "start_time": "00:38:23",
+    "end_time": "00:38:56"
+  },
+  {
+    "price": 110.375,
+    "duration": 32.480616,
+    "start_time": "02:26:49",
+    "end_time": "02:27:22"
+  },
+  {
+    "price": 110.3703,
+    "duration": 32.340025,
+    "start_time": "01:04:21",
+    "end_time": "01:04:53"
+  },
+  {
+    "price": 110.375,
+    "duration": 31.862429,
+    "start_time": "02:12:14",
+    "end_time": "02:12:46"
+  },
+  {
+    "price": 110.375,
+    "duration": 31.679135,
+    "start_time": "02:18:54",
+    "end_time": "02:19:26"
+  },
+  {
+    "price": 110.37,
+    "duration": 31.460585,
+    "start_time": "00:20:04",
+    "end_time": "00:20:35"
+  },
+  {
+    "price": 110.375,
+    "duration": 31.163088,
+    "start_time": "00:43:14",
+    "end_time": "00:43:45"
+  },
+  {
+    "price": 110.375,
+    "duration": 30.979405,
+    "start_time": "00:50:37",
+    "end_time": "00:51:08"
+  },
+  {
+    "price": 110.37,
+    "duration": 30.871575,
+    "start_time": "00:05:23",
+    "end_time": "00:05:54"
+  },
+  {
+    "price": 110.3746,
+    "duration": 30.278395,
+    "start_time": "03:00:54",
+    "end_time": "03:01:24"
+  },
+  {
+    "price": 110.3753,
+    "duration": 30.049116,
+    "start_time": "03:05:11",
+    "end_time": "03:05:41"
+  },
+  {
+    "price": 110.37,
+    "duration": 29.480622,
+    "start_time": "00:08:48",
+    "end_time": "00:09:18"
+  },
+  {
+    "price": 110.375,
+    "duration": 29.460252,
+    "start_time": "02:42:30",
+    "end_time": "02:43:00"
+  },
+  {
+    "price": 110.375,
+    "duration": 29.057912,
+    "start_time": "02:39:06",
+    "end_time": "02:39:34"
+  },
+  {
+    "price": 110.375,
+    "duration": 29.043426,
+    "start_time": "02:11:29",
+    "end_time": "02:11:58"
+  },
+  {
+    "price": 110.3799,
+    "duration": 28.666433,
+    "start_time": "02:31:26",
+    "end_time": "02:31:55"
+  },
+  {
+    "price": 110.3795,
+    "duration": 28.063324,
+    "start_time": "02:03:56",
+    "end_time": "02:04:24"
+  },
+  {
+    "price": 110.37,
+    "duration": 27.872985,
+    "start_time": "01:58:04",
+    "end_time": "01:58:32"
+  },
+  {
+    "price": 110.38,
+    "duration": 27.623013,
+    "start_time": "03:06:29",
+    "end_time": "03:06:57"
+  },
+  {
+    "price": 110.3799,
+    "duration": 27.524896,
+    "start_time": "00:43:46",
+    "end_time": "00:44:13"
+  },
+  {
+    "price": 110.375,
+    "duration": 27.239305,
+    "start_time": "02:38:15",
+    "end_time": "02:38:42"
+  },
+  {
+    "price": 110.37,
+    "duration": 27.111274,
+    "start_time": "00:58:15",
+    "end_time": "00:58:42"
+  },
+  {
+    "price": 110.375,
+    "duration": 26.982892,
+    "start_time": "00:26:58",
+    "end_time": "00:27:25"
+  },
+  {
+    "price": 110.3753,
+    "duration": 26.62873,
+    "start_time": "00:05:54",
+    "end_time": "00:06:21"
+  },
+  {
+    "price": 110.37,
+    "duration": 26.288531,
+    "start_time": "01:41:22",
+    "end_time": "01:41:49"
+  },
+  {
+    "price": 110.375,
+    "duration": 25.766987,
+    "start_time": "00:30:59",
+    "end_time": "00:31:25"
+  },
+  {
+    "price": 110.375,
+    "duration": 25.424281,
+    "start_time": "02:37:43",
+    "end_time": "02:38:09"
+  },
+  {
+    "price": 110.37,
+    "duration": 25.373972,
+    "start_time": "00:11:20",
+    "end_time": "00:11:45"
+  },
+  {
+    "price": 110.375,
+    "duration": 25.227712,
+    "start_time": "02:39:36",
+    "end_time": "02:40:01"
+  },
+  {
+    "price": 110.375,
+    "duration": 25.024926,
+    "start_time": "02:47:24",
+    "end_time": "02:47:49"
+  },
+  {
+    "price": 110.375,
+    "duration": 24.903834,
+    "start_time": "00:36:28",
+    "end_time": "00:36:53"
+  },
+  {
+    "price": 110.38,
+    "duration": 24.689741,
+    "start_time": "00:42:31",
+    "end_time": "00:42:55"
+  },
+  {
+    "price": 110.38,
+    "duration": 24.206826,
+    "start_time": "23:53:38",
+    "end_time": "23:54:01"
+  },
+  {
+    "price": 110.38,
+    "duration": 24.192382,
+    "start_time": "03:09:31",
+    "end_time": "03:09:55"
+  },
+  {
+    "price": 110.3767,
+    "duration": 24.095238,
+    "start_time": "00:53:08",
+    "end_time": "00:53:32"
+  },
+  {
+    "price": 110.3767,
+    "duration": 24.053937,
+    "start_time": "02:05:12",
+    "end_time": "02:05:36"
+  },
+  {
+    "price": 110.375,
+    "duration": 24.015783,
+    "start_time": "01:51:31",
+    "end_time": "01:51:55"
+  },
+  {
+    "price": 110.375,
+    "duration": 23.809541,
+    "start_time": "02:34:30",
+    "end_time": "02:34:54"
+  },
+  {
+    "price": 110.37,
+    "duration": 23.50582,
+    "start_time": "23:45:54",
+    "end_time": "23:46:18"
+  },
+  {
+    "price": 110.3707,
+    "duration": 23.186275,
+    "start_time": "23:57:32",
+    "end_time": "23:57:55"
+  },
+  {
+    "price": 110.37,
+    "duration": 23.060266,
+    "start_time": "00:48:51",
+    "end_time": "00:49:14"
+  },
+  {
+    "price": 110.38,
+    "duration": 23.015962,
+    "start_time": "01:24:21",
+    "end_time": "01:24:44"
+  },
+  {
+    "price": 110.375,
+    "duration": 22.899396,
+    "start_time": "00:29:42",
+    "end_time": "00:30:05"
+  },
+  {
+    "price": 110.3799,
+    "duration": 22.595341,
+    "start_time": "02:09:50",
+    "end_time": "02:10:13"
+  },
+  {
+    "price": 110.375,
+    "duration": 21.800104,
+    "start_time": "02:22:24",
+    "end_time": "02:22:45"
+  },
+  {
+    "price": 110.3718,
+    "duration": 21.609403,
+    "start_time": "02:30:08",
+    "end_time": "02:30:29"
+  },
+  {
+    "price": 110.375,
+    "duration": 21.600959,
+    "start_time": "02:24:06",
+    "end_time": "02:24:27"
+  },
+  {
+    "price": 110.37,
+    "duration": 21.305563,
+    "start_time": "00:30:05",
+    "end_time": "00:30:26"
+  },
+  {
+    "price": 110.38,
+    "duration": 21.216197,
+    "start_time": "01:40:54",
+    "end_time": "01:41:16"
+  },
+  {
+    "price": 110.375,
+    "duration": 21.00188,
+    "start_time": "02:46:03",
+    "end_time": "02:46:24"
+  },
+  {
+    "price": 110.37,
+    "duration": 20.747767,
+    "start_time": "00:08:22",
+    "end_time": "00:08:43"
+  },
+  {
+    "price": 110.38,
+    "duration": 20.466626,
+    "start_time": "00:24:58",
+    "end_time": "00:25:18"
+  },
+  {
+    "price": 110.38,
+    "duration": 20.440572,
+    "start_time": "00:51:15",
+    "end_time": "00:51:36"
+  },
+  {
+    "price": 110.3733,
+    "duration": 20.373857,
+    "start_time": "03:05:50",
+    "end_time": "03:06:10"
+  },
+  {
+    "price": 110.37,
+    "duration": 20.265062,
+    "start_time": "00:31:25",
+    "end_time": "00:31:45"
+  },
+  {
+    "price": 110.37,
+    "duration": 20.073941,
+    "start_time": "00:23:03",
+    "end_time": "00:23:23"
+  },
+  {
+    "price": 110.38,
+    "duration": 20.051415,
+    "start_time": "00:48:22",
+    "end_time": "00:48:42"
+  },
+  {
+    "price": 110.375,
+    "duration": 20.040396,
+    "start_time": "00:35:13",
+    "end_time": "00:35:33"
+  },
+  {
+    "price": 110.375,
+    "duration": 20.039979,
+    "start_time": "00:53:32",
+    "end_time": "00:53:52"
+  },
+  {
+    "price": 110.373,
+    "duration": 19.957776,
+    "start_time": "02:10:33",
+    "end_time": "02:10:53"
+  },
+  {
+    "price": 110.38,
+    "duration": 19.825253,
+    "start_time": "00:45:16",
+    "end_time": "00:45:36"
+  },
+  {
+    "price": 110.37,
+    "duration": 19.723304,
+    "start_time": "23:55:38",
+    "end_time": "23:55:58"
+  },
+  {
+    "price": 110.37,
+    "duration": 19.689425,
+    "start_time": "00:16:01",
+    "end_time": "00:16:21"
+  },
+  {
+    "price": 110.37,
+    "duration": 19.595296,
+    "start_time": "01:26:33",
+    "end_time": "01:26:53"
+  },
+  {
+    "price": 110.375,
+    "duration": 19.572421,
+    "start_time": "02:58:13",
+    "end_time": "02:58:33"
+  },
+  {
+    "price": 110.375,
+    "duration": 19.559572,
+    "start_time": "03:11:21",
+    "end_time": "03:11:40"
+  },
+  {
+    "price": 110.3744,
+    "duration": 19.462393,
+    "start_time": "00:29:23",
+    "end_time": "00:29:42"
+  },
+  {
+    "price": 110.37,
+    "duration": 19.196379,
+    "start_time": "01:28:07",
+    "end_time": "01:28:26"
+  },
+  {
+    "price": 110.37,
+    "duration": 19.187603,
+    "start_time": "01:38:36",
+    "end_time": "01:38:56"
+  },
+  {
+    "price": 110.375,
+    "duration": 19.170248,
+    "start_time": "02:34:10",
+    "end_time": "02:34:29"
+  },
+  {
+    "price": 110.38,
+    "duration": 18.9605,
+    "start_time": "01:32:45",
+    "end_time": "01:33:04"
+  },
+  {
+    "price": 110.37,
+    "duration": 18.9242,
+    "start_time": "00:10:07",
+    "end_time": "00:10:26"
+  },
+  {
+    "price": 110.3747,
+    "duration": 18.763072,
+    "start_time": "03:11:02",
+    "end_time": "03:11:21"
+  },
+  {
+    "price": 110.37,
+    "duration": 18.418642,
+    "start_time": "00:35:39",
+    "end_time": "00:35:57"
+  },
+  {
+    "price": 110.37,
+    "duration": 18.393403,
+    "start_time": "01:15:30",
+    "end_time": "01:15:48"
+  },
+  {
+    "price": 110.375,
+    "duration": 18.35647,
+    "start_time": "02:27:24",
+    "end_time": "02:27:42"
+  },
+  {
+    "price": 110.37,
+    "duration": 18.354849,
+    "start_time": "01:07:19",
+    "end_time": "01:07:37"
+  },
+  {
+    "price": 110.375,
+    "duration": 18.351148,
+    "start_time": "02:17:22",
+    "end_time": "02:17:40"
+  },
+  {
+    "price": 110.375,
+    "duration": 18.328664,
+    "start_time": "02:33:24",
+    "end_time": "02:33:42"
+  },
+  {
+    "price": 110.38,
+    "duration": 18.256811,
+    "start_time": "00:18:52",
+    "end_time": "00:19:11"
+  },
+  {
+    "price": 110.37,
+    "duration": 17.562314,
+    "start_time": "02:57:14",
+    "end_time": "02:57:31"
+  },
+  {
+    "price": 110.375,
+    "duration": 17.376255,
+    "start_time": "02:46:26",
+    "end_time": "02:46:44"
+  },
+  {
+    "price": 110.375,
+    "duration": 17.357102,
+    "start_time": "02:35:05",
+    "end_time": "02:35:23"
+  },
+  {
+    "price": 110.37,
+    "duration": 17.217938,
+    "start_time": "00:26:02",
+    "end_time": "00:26:19"
+  },
+  {
+    "price": 110.375,
+    "duration": 17.214163,
+    "start_time": "00:41:45",
+    "end_time": "00:42:02"
+  },
+  {
+    "price": 110.375,
+    "duration": 17.142882,
+    "start_time": "02:29:16",
+    "end_time": "02:29:33"
+  },
+  {
+    "price": 110.375,
+    "duration": 16.935935,
+    "start_time": "02:17:40",
+    "end_time": "02:17:57"
+  },
+  {
+    "price": 110.38,
+    "duration": 16.825378,
+    "start_time": "00:27:25",
+    "end_time": "00:27:42"
+  },
+  {
+    "price": 110.37,
+    "duration": 16.791845,
+    "start_time": "01:22:22",
+    "end_time": "01:22:39"
+  },
+  {
+    "price": 110.3715,
+    "duration": 16.600551,
+    "start_time": "01:00:27",
+    "end_time": "01:00:44"
+  },
+  {
+    "price": 110.375,
+    "duration": 16.542274,
+    "start_time": "02:12:56",
+    "end_time": "02:13:12"
+  },
+  {
+    "price": 110.375,
+    "duration": 16.536754,
+    "start_time": "02:27:44",
+    "end_time": "02:28:01"
+  },
+  {
+    "price": 110.38,
+    "duration": 16.381088,
+    "start_time": "01:16:44",
+    "end_time": "01:17:00"
+  },
+  {
+    "price": 110.375,
+    "duration": 16.33585,
+    "start_time": "02:14:28",
+    "end_time": "02:14:44"
+  },
+  {
+    "price": 110.3753,
+    "duration": 16.325781,
+    "start_time": "02:29:36",
+    "end_time": "02:29:52"
+  },
+  {
+    "price": 110.38,
+    "duration": 16.236576,
+    "start_time": "00:32:37",
+    "end_time": "00:32:54"
+  },
+  {
+    "price": 110.375,
+    "duration": 16.21906,
+    "start_time": "00:33:52",
+    "end_time": "00:34:08"
+  },
+  {
+    "price": 110.375,
+    "duration": 16.193533,
+    "start_time": "00:48:06",
+    "end_time": "00:48:22"
+  },
+  {
+    "price": 110.3753,
+    "duration": 16.168729,
+    "start_time": "00:39:46",
+    "end_time": "00:40:02"
+  },
+  {
+    "price": 110.38,
+    "duration": 16.043779,
+    "start_time": "00:30:26",
+    "end_time": "00:30:42"
+  },
+  {
+    "price": 110.38,
+    "duration": 16.018986,
+    "start_time": "00:34:15",
+    "end_time": "00:34:31"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.998817,
+    "start_time": "00:57:59",
+    "end_time": "00:58:15"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.947034,
+    "start_time": "02:22:49",
+    "end_time": "02:23:05"
+  },
+  {
+    "price": 110.37,
+    "duration": 15.851329,
+    "start_time": "00:09:51",
+    "end_time": "00:10:06"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.845406,
+    "start_time": "00:06:48",
+    "end_time": "00:07:04"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.769781,
+    "start_time": "01:27:41",
+    "end_time": "01:27:56"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.765878,
+    "start_time": "01:45:46",
+    "end_time": "01:46:02"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.756867,
+    "start_time": "02:47:03",
+    "end_time": "02:47:19"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.751935,
+    "start_time": "01:50:46",
+    "end_time": "01:51:02"
+  },
+  {
+    "price": 110.3746,
+    "duration": 15.74937,
+    "start_time": "01:53:09",
+    "end_time": "01:53:25"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.741794,
+    "start_time": "02:51:20",
+    "end_time": "02:51:36"
+  },
+  {
+    "price": 110.3744,
+    "duration": 15.599321,
+    "start_time": "00:25:42",
+    "end_time": "00:25:58"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.587858,
+    "start_time": "00:52:53",
+    "end_time": "00:53:08"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.558792,
+    "start_time": "02:37:15",
+    "end_time": "02:37:31"
+  },
+  {
+    "price": 110.37,
+    "duration": 15.537883,
+    "start_time": "03:06:10",
+    "end_time": "03:06:26"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.351528,
+    "start_time": "02:29:52",
+    "end_time": "02:30:08"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.336622,
+    "start_time": "02:50:54",
+    "end_time": "02:51:09"
+  },
+  {
+    "price": 110.37,
+    "duration": 15.33351,
+    "start_time": "03:10:32",
+    "end_time": "03:10:47"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.330855,
+    "start_time": "02:33:51",
+    "end_time": "02:34:06"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.188679,
+    "start_time": "00:42:02",
+    "end_time": "00:42:17"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.176441,
+    "start_time": "00:58:46",
+    "end_time": "00:59:01"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.172301,
+    "start_time": "01:01:09",
+    "end_time": "01:01:24"
+  },
+  {
+    "price": 110.38,
+    "duration": 15.17099,
+    "start_time": "01:44:20",
+    "end_time": "01:44:35"
+  },
+  {
+    "price": 110.375,
+    "duration": 15.136332,
+    "start_time": "02:36:54",
+    "end_time": "02:37:09"
+  },
+  {
+    "price": 110.38,
+    "duration": 14.996816,
+    "start_time": "00:24:13",
+    "end_time": "00:24:28"
+  },
+  {
+    "price": 110.37,
+    "duration": 14.970661,
+    "start_time": "01:19:46",
+    "end_time": "01:19:57"
+  },
+  {
+    "price": 110.38,
+    "duration": 14.943652,
+    "start_time": "01:21:01",
+    "end_time": "01:21:16"
+  },
+  {
+    "price": 110.3746,
+    "duration": 14.926812,
+    "start_time": "02:10:53",
+    "end_time": "02:11:09"
+  },
+  {
+    "price": 110.37,
+    "duration": 14.773121,
+    "start_time": "01:42:31",
+    "end_time": "01:42:46"
+  },
+  {
+    "price": 110.37,
+    "duration": 14.651049,
+    "start_time": "00:04:55",
+    "end_time": "00:05:09"
+  },
+  {
+    "price": 110.37,
+    "duration": 14.647315,
+    "start_time": "00:04:01",
+    "end_time": "00:04:15"
+  },
+  {
+    "price": 110.375,
+    "duration": 14.623357,
+    "start_time": "00:28:51",
+    "end_time": "00:29:05"
+  },
+  {
+    "price": 110.3753,
+    "duration": 14.591006,
+    "start_time": "00:38:03",
+    "end_time": "00:38:17"
+  },
+  {
+    "price": 110.38,
+    "duration": 14.56436,
+    "start_time": "01:10:08",
+    "end_time": "01:10:23"
+  },
+  {
+    "price": 110.38,
+    "duration": 14.551024,
+    "start_time": "01:05:18",
+    "end_time": "01:05:32"
+  },
+  {
+    "price": 110.37,
+    "duration": 14.536491,
+    "start_time": "01:40:40",
+    "end_time": "01:40:54"
+  },
+  {
+    "price": 110.375,
+    "duration": 14.53583,
+    "start_time": "01:55:24",
+    "end_time": "01:55:38"
+  },
+  {
+    "price": 110.375,
+    "duration": 14.531019,
+    "start_time": "03:10:47",
+    "end_time": "03:11:01"
+  },
+  {
+    "price": 110.37,
+    "duration": 14.409787,
+    "start_time": "00:12:49",
+    "end_time": "00:13:04"
+  },
+  {
+    "price": 110.38,
+    "duration": 14.359155,
+    "start_time": "00:55:13",
+    "end_time": "00:55:27"
+  },
+  {
+    "price": 110.3796,
+    "duration": 14.335162,
+    "start_time": "01:58:35",
+    "end_time": "01:58:49"
+  }
+]
