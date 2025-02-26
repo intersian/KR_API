@@ -7,6 +7,8 @@ import aiohttp  # 텔레그램 API 호출용
 from dataclasses import dataclass
 from typing import List
 from pathlib import Path
+import os
+import sys
 
 # 모니터링할 종목 리스트
 SYMBOLS = [
@@ -17,13 +19,14 @@ SYMBOLS = [
 INTERVAL = 3  # 조회 간격 (초)
 
 # 웹소켓 설정
-WEBSOCKET_URL = "ws://ops.koreainvestment.com:31000"  # 해외주식 실시간 포트
+WEBSOCKET_URL = "ws://ops.koreainvestment.com:21000"  # 해외주식 실시간 포트
 
 # 가격별 첫 체결 시간을 저장할 딕셔너리
 price_first_time = {}
 current_price = None
 max_duration = 0  # 최장 연속체결 시간
 max_duration_price = None  # 최장 연속체결 가격
+price_total_volume = {}  # 가격별 누적 체결량 추가
 
 # 텔레그램 설정
 TELEGRAM_ALERT_THRESHOLD = 120  # 알림 기준 시간 (초)
@@ -35,6 +38,7 @@ class TradeRecord:
     duration: float
     start_time: str
     end_time: str
+    total_volume: int  # 누적체결량 필드 추가
 
 class RecordKeeper:
     def __init__(self, max_records=200):
@@ -43,7 +47,7 @@ class RecordKeeper:
         
         # 오늘 날짜로 파일명 생성
         today = datetime.now().strftime('%Y%m%d')
-        self.file_path = Path('shv_alarm/shv_daily') / f'trade_records_{today}.json'
+        self.file_path = Path('shv_daily') / f'trade_records_{today}.json'
         
         # shv_daily 폴더가 없으면 생성
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,15 +80,25 @@ class RecordKeeper:
         except Exception as e:
             print(f"기록 파일 저장 실패: {e}")
     
-    def add_record(self, price: float, duration: float, start_time: str, end_time: str):
+    def add_record(self, price: float, duration: float, start_time: str, end_time: str, total_volume: int):
         """새로운 기록 추가"""
-        record = TradeRecord(price=price, duration=duration, start_time=start_time, end_time=end_time)
+        record = TradeRecord(price, duration, start_time, end_time, total_volume)
         
-        # 기존 기록에 추가하고 정렬
+        # 기존 기록 중 동일 가격이 있는지 확인
+        for i, existing in enumerate(self.records):
+            if existing.price == price:
+                # 지속시간이 더 긴 경우에만 업데이트
+                if duration > existing.duration:
+                    self.records[i] = record
+                return
+        
+        # 새로운 기록 추가
         self.records.append(record)
+        
+        # 지속시간 기준 내림차순 정렬
         self.records.sort(key=lambda x: x.duration, reverse=True)
         
-        # 최대 개수 유지
+        # 최대 기록 수 유지
         if len(self.records) > self.max_records:
             self.records = self.records[:self.max_records]
         
@@ -108,8 +122,19 @@ record_keeper = RecordKeeper()
 def load_config():
     """설정 파일 로드"""
     try:
+        # 실행 파일 경로 확인
+        if getattr(sys, 'frozen', False):
+            # PyInstaller로 생성된 실행 파일인 경우
+            application_path = os.path.dirname(sys.executable)
+        else:
+            # 일반 Python 스크립트인 경우
+            application_path = os.path.dirname(os.path.abspath(__file__))
+            
+        # .env 파일 경로 설정
+        env_path = os.path.join(application_path, '.env')
+        
         config = {}
-        with open('shv_alarm/.env', 'r', encoding='utf-8') as f:
+        with open(env_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):
@@ -150,38 +175,52 @@ class OverseasMonitor:
         try:
             # 웹소켓 승인키 발급
             approval_key = await self.api.get_approval_key()
-            
+            if not approval_key:
+                print("승인키 발급 실패")
+                return False
+                
             # 웹소켓 연결
             self.websocket = await websockets.connect(
                 WEBSOCKET_URL,
                 ping_interval=None,
                 ping_timeout=None
             )
-
-            # 웹소켓 접속 요청
-            connect_request = {
+            
+            # 웹소켓 연결 후 등록 요청
+            register_data = {
                 "header": {
                     "approval_key": approval_key,
-                    "custtype": "P",
                     "tr_type": "1",
+                    "custtype": "P",
                     "content-type": "utf-8"
                 },
                 "body": {
-                    "input": {
-                        "tr_id": "HDFSCNT0",  # 해외주식 체결가
-                        "tr_key": SYMBOLS[0]   # 종목코드
-                    }
+                    "tr_id": "HDFSCNT0",
+                    "tr_key": SYMBOLS[0]
                 }
             }
             
-            await self.websocket.send(json.dumps(connect_request))
-            response = await self.websocket.recv()
-            print(f"웹소켓 연결 응답: {response}")
+            # 요청 전 데이터 확인
+            print(f"웹소켓 등록 요청: {json.dumps(register_data, indent=2)}")
             
+            await self.websocket.send(json.dumps(register_data))
+            
+            # 등록 응답 확인
+            response = await self.websocket.recv()
+            response_data = json.loads(response)
+            
+            if response_data.get("body", {}).get("rt_cd") != "0":
+                print(f"웹소켓 등록 실패: {response_data}")
+                await self.websocket.close()
+                return False
+                
+            print("웹소켓 연결 및 등록 완료")
             return True
             
         except Exception as e:
             print(f"웹소켓 연결 실패: {str(e)}")
+            if self.websocket:
+                await self.websocket.close()
             return False
 
     def format_trade_data(self, data):
@@ -240,7 +279,8 @@ class OverseasMonitor:
                             price=current_price,
                             duration=duration,
                             start_time=start_time,
-                            end_time=end_time
+                            end_time=end_time,
+                            total_volume=price_total_volume.get(current_price, 0)
                         )
                 
                 # 새로운 가격 시작
@@ -268,12 +308,11 @@ class OverseasMonitor:
                         if current_time.timestamp() - last_alert >= TELEGRAM_ALERT_THRESHOLD:
                             # 알림 메시지 생성
                             alert_message = (
-                                f"🔔 <b>동일가격 연속체결 알림</b>\n\n"
-                                f"종목: {fields['종목코드']}\n"
+                                f"⚡ SHV 동일가격 연속체결 알림\n\n"
                                 f"가격: ${trade_price:,.4f}\n"
-                                f"연속체결시간: {duration_seconds:.1f}초\n"
-                                f"체결량: {fields['체결량']:,}\n"
-                                f"체결강도: {fields['체결강도']:,.2f}%"
+                                f"지속시간: {duration_seconds:.1f}초\n"
+                                f"누적체결량: {price_total_volume[trade_price]:,}주\n"
+                                f"현재시각: {current_time.strftime('%H:%M:%S')}"
                             )
                             
                             # 텔레그램 전송

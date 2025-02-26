@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from kis import KISApi
 import aiohttp  # 텔레그램 API 호출용
+import os
+import sys
 
 # 모니터링할 종목 리스트
 SYMBOLS = [
@@ -16,21 +18,44 @@ VOLUME_THRESHOLD = 10000  # 거래량 임계값
 def load_config():
     """설정 파일 로드"""
     try:
+        # 실행 파일 경로 확인
+        if getattr(sys, 'frozen', False):
+            # PyInstaller로 생성된 실행 파일인 경우
+            application_path = os.path.dirname(sys.executable)
+        else:
+            # 일반 Python 스크립트인 경우
+            application_path = os.path.dirname(os.path.abspath(__file__))
+            
+        # .env 파일 경로 설정
+        env_path = os.path.join(application_path, '.env')
+        
         config = {}
-        with open('SHV_ALARM/.env', 'r', encoding='utf-8') as f:
+        with open(env_path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
                 if '=' in line:
                     key, value = line.split('=', 1)
-                    if '#' in value:
+                    if '#' in value:  # 주석 제거
                         value = value.split('#')[0]
                     config[key.strip()] = value.strip()
+                    
+                    # 문자열로 된 리스트를 실제 리스트로 변환
+                    if value.strip().startswith('[') and value.strip().endswith(']'):
+                        try:
+                            config[key.strip()] = json.loads(value.strip())
+                        except:
+                            pass
+                            
         return config
+        
+    except FileNotFoundError:
+        print(f"설정 파일을 찾을 수 없습니다. (검색 경로: {env_path})")
+        return None
     except Exception as e:
         print(f"설정 파일 로드 중 오류 발생: {e}")
-        return {}
+        return None
 
 class TelegramNotifier:
     def __init__(self, bot_token, chat_id):

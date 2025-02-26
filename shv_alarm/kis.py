@@ -7,6 +7,7 @@ import time
 import uuid
 from datetime import datetime, timedelta
 import os
+import sys
 
 import aiohttp
 import requests
@@ -34,8 +35,17 @@ class KISApi:
         self.approval_key = None
         self.approval_key_expired_at = None
         
+        # 토큰 파일 경로 설정
+        if getattr(sys, 'frozen', False):
+            # PyInstaller로 생성된 실행 파일인 경우
+            application_path = os.path.dirname(sys.executable)
+        else:
+            # 일반 Python 스크립트인 경우
+            application_path = os.path.dirname(os.path.abspath(__file__))
+            
         # 토큰 파일 경로
-        self.token_file = "shv_alarm/token_info.json"
+        self.token_file = os.path.join(application_path, "token_info.json")
+        
         # 저장된 토큰 로드
         self._load_token()
         
