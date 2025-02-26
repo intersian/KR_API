@@ -40,7 +40,14 @@ class RecordKeeper:
     def __init__(self, max_records=200):
         self.max_records = max_records
         self.records: List[TradeRecord] = []
-        self.file_path = Path('shv_alarm/trade_records.json')
+        
+        # 오늘 날짜로 파일명 생성
+        today = datetime.now().strftime('%Y%m%d')
+        self.file_path = Path('shv_alarm/shv_daily') / f'trade_records_{today}.json'
+        
+        # shv_daily 폴더가 없으면 생성
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
+        
         self.load_records()
     
     def load_records(self):
@@ -55,6 +62,9 @@ class RecordKeeper:
                     # 최대 개수 유지
                     if len(self.records) > self.max_records:
                         self.records = self.records[:self.max_records]
+                print(f"\n기존 기록 파일을 로드했습니다: {self.file_path.name}")
+            else:
+                print(f"\n새로운 기록 파일을 생성합니다: {self.file_path.name}")
         except Exception as e:
             print(f"기록 파일 로드 실패: {e}")
     
